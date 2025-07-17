@@ -228,6 +228,8 @@ async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return USER_CONFIG
     
     try:
+        if await check_start_command(update, update.message.text):
+            return await start(update, context)
         ensure_config_key("api_id", int(text))
         await update.message.reply_text("✅ API ID saved.", reply_markup=user_config_menu())
         return USER_CONFIG
