@@ -43,7 +43,7 @@ def is_authorized(event):
     return event.sender_id in allowed_users
 
 # 📌 Start command - shows 3 main options
-@bot.on(events.NewMessage(pattern="/start"))
+@BOT.on(events.NewMessage(pattern="/start"))
 async def start_handler(event):
     if not is_authorized(event):
         return await event.reply("🚫 Not authorized.")
