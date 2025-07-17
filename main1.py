@@ -63,6 +63,7 @@ async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("User Config"), handle_start_mission))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Start Mission"), handle_start_mission))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Full Clone"), handle_full_clone))
     app.add_handler(MessageHandler(filters.ALL, chat_shared_handler))
