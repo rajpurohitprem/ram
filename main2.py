@@ -304,6 +304,7 @@ def main():
         ],
         states={
             MAIN_MENU: [
+                CommandHandler("start", start),
                 MessageHandler(filters.Regex("^User Config$"), user_config),
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
@@ -347,6 +348,7 @@ def main():
         ],
     },
     fallbacks=[
+        CommandHandler("start", start),
         MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
         MessageHandler(filters.Regex("^skip$"), back_to_main),
     ],
