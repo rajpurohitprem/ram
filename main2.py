@@ -115,14 +115,20 @@ async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         config = load_config()
-        formatted_config = json.dumps(config, indent=2)
         
-        # Truncate if too long for Telegram
-        if len(formatted_config) > 4000:
-            formatted_config = formatted_config[:4000] + "\n... (truncated)"
+        # Hide sensitive info
+        safe_config = config.copy()
+        if 'api_hash' in safe_config:
+            safe_config['api_hash'] = f"{safe_config['api_hash'][:4]}...{safe_config['api_hash'][-4:]}"
+        if 'phone' in safe_config:
+            safe_config['phone'] = f"{safe_config['phone'][:3]}...{safe_config['phone'][-2:]}"
+        
+        formatted_config = json.dumps(safe_config, indent=2)
         
         await update.message.reply_text(
-            f"<pre>Current Config:\n{formatted_config}</pre>",
+            f"<b>Current Configuration:</b>\n"
+            f"<pre>{formatted_config}</pre>\n"
+            f"<i>Sensitive fields are partially hidden</i>",
             parse_mode=ParseMode.HTML,
             reply_markup=user_config_menu()
         )
@@ -288,9 +294,19 @@ async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
         return USER_CONFIG
     
-    ensure_config_key("phone", text)
-    await update.message.reply_text("✅ Phone number updated.", reply_markup=user_config_menu())
-    return USER_CONFIG
+     # Validation (basic international phone format)
+    if text.startswith('+') and text[1:].isdigit() and len(text) >= 8:
+        ensure_config_key("phone", text)
+        await update.message.reply_text("✅ Phone number saved!", reply_markup=main_menu())
+        return USER_CONFIG
+    else:
+        await update.message.reply_text(
+            "❌ Invalid phone number!\n"
+            "Must be in international format with country code\n"
+            "Example: +123456789012",
+            reply_markup=user_config_menu()
+        )
+        return WAITING_FOR_PHONE
 
 async def request_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
