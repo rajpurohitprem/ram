@@ -89,6 +89,7 @@ def mission_menu():
 # ---------------------- HANDLERS ----------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
     await update.message.reply_text("Welcome! Use buttons to configure and start cloning.", reply_markup=main_menu())
     return MAIN_MENU
 
