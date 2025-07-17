@@ -332,6 +332,12 @@ async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     return SOURCE_TARGET
 
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    error = context.error
+    print(f"Error: {error}")
+    if update and update.message:
+        await update.message.reply_text(f"⚠️ Error occurred: {error}")
+
 # ---------------------- MAIN ----------------------
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
