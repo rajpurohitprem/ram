@@ -14,7 +14,7 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-from clone_worker import clone_messages  # <- Import clone logic
+from clone_worker import copy_messages  # <- Import clone logic
 
 # Load token
 with open("bot.json") as f:
