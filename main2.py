@@ -239,4 +239,4 @@ def main():
     print("🤖 Bot is running and ready")
     app.run_polling()
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
