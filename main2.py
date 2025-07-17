@@ -220,8 +220,10 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return USER_CONFIG
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if await check_start_command(update, update.message.text):
-        return await start(update, context)
+    text = update.message.text
+    if text.lower() == "/start":
+        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
+        return USER_CONFIG
     text = update.message.text
     if text.lower() == "skip":
         await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
