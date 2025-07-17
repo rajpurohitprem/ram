@@ -92,11 +92,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome! Use buttons to configure and start cloning.", reply_markup=main_menu())
     return MAIN_MENU
 
-
-async def ⬅ Back(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! Use buttons to configure and start cloning.", reply_markup=main_menu())
-    return MAIN_MENU
-
 async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Main Menu:", reply_markup=main_menu())
     return MAIN_MENU
@@ -303,6 +298,7 @@ def main():
                 MessageHandler(filters.Regex("^User Config$"), user_config),
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             USER_CONFIG: [
                 MessageHandler(filters.Regex("^Api ID$"), request_api_id),
