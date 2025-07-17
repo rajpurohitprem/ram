@@ -24,6 +24,7 @@ SESSION_FILE = "anon.session"
 STATE_FILE = "clone_state.json"
 PROGRESS_FILE = "clone_progress.json"
 STOP_FILE = "stop.flag"
+SENT_LOG = "sent_ids.txt"
 
 # Ensure required files exist
 for f in [CONFIG_FILE, BOT_FILE]:
