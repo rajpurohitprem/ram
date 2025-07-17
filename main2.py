@@ -15,7 +15,7 @@ from telegram.ext import (
     ContextTypes,
     ConversationHandler,
 )
-from clone_worker import clone_worker  # Removed duplicate import
+from clone_worker import clone_worker
 from telethon.sync import TelegramClient
 
 CONFIG_FILE = "config.json"
@@ -111,15 +111,49 @@ async def request_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please send your API ID:")
     return WAITING_FOR_API_ID
 
+async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text.lower() in ["skip", "⬅ back"]:
+        await update.message.reply_text("API ID remains unchanged.", reply_markup=main_menu())
+        return MAIN_MENU
+    
+    try:
+        ensure_config_key("api_id", int(text))
+        await update.message.reply_text("✅ API ID saved.", reply_markup=main_menu())
+        return MAIN_MENU
+    except ValueError:
+        await update.message.reply_text("❌ Invalid API ID. Must be a number. Please try again:")
+        return WAITING_FOR_API_ID
+
 async def request_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please send your API Hash:")
     return WAITING_FOR_API_HASH
+
+async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text.lower() in ["skip", "⬅ back"]:
+        await update.message.reply_text("API Hash remains unchanged.", reply_markup=main_menu())
+        return MAIN_MENU
+    
+    ensure_config_key("api_hash", text)
+    await update.message.reply_text("✅ API Hash saved.", reply_markup=main_menu())
+    return MAIN_MENU
 
 async def request_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     config = load_config()
     current = config.get("phone", "Not Set")
     await update.message.reply_text(f"Current number: `{current}`\nSend new phone number or type 'skip' to keep.", parse_mode="Markdown")
     return WAITING_FOR_PHONE
+
+async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text.lower() in ["skip", "⬅ back"]:
+        await update.message.reply_text("Phone number remains unchanged.", reply_markup=main_menu())
+        return MAIN_MENU
+    
+    ensure_config_key("phone", text)
+    await update.message.reply_text("✅ Phone number updated.", reply_markup=main_menu())
+    return MAIN_MENU
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     config = load_config()
@@ -136,51 +170,17 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["client"] = client
         return USER_CONFIG
     
-    await update.message.reply_text("✅ Already logged in.")
+    await update.message.reply_text("✅ Already logged in.", reply_markup=main_menu())
     await client.disconnect()
-    return USER_CONFIG
+    return MAIN_MENU
 
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if os.path.exists(SESSION_FILE):
         os.remove(SESSION_FILE)
-        await update.message.reply_text("🔒 Logged out and session removed.")
+        await update.message.reply_text("🔒 Logged out and session removed.", reply_markup=main_menu())
     else:
-        await update.message.reply_text("No session to remove.")
-    return USER_CONFIG
-
-async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
-    
-    try:
-        ensure_config_key("api_id", int(text))
-        await update.message.reply_text("✅ API ID saved.", reply_markup=user_config_menu())
-        return USER_CONFIG
-    except ValueError:
-        await update.message.reply_text("❌ Invalid API ID. Must be a number.")
-        return WAITING_FOR_API_ID
-
-async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
-    
-    ensure_config_key("api_hash", text)
-    await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
-    return USER_CONFIG
-
-async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
-    
-    ensure_config_key("phone", text)
-    await update.message.reply_text("✅ Phone number updated.", reply_markup=user_config_menu())
-    return USER_CONFIG
+        await update.message.reply_text("No session to remove.", reply_markup=main_menu())
+    return MAIN_MENU
 
 async def request_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Send start message ID:")
@@ -188,9 +188,9 @@ async def request_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=mission_menu())
-        return MISSION
+    if text.lower() in ["skip", "⬅ back"]:
+        await update.message.reply_text("Range clone cancelled.", reply_markup=main_menu())
+        return MAIN_MENU
     
     try:
         context.user_data["range_start"] = int(text)
@@ -202,17 +202,17 @@ async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=mission_menu())
-        return MISSION
+    if text.lower() in ["skip", "⬅ back"]:
+        await update.message.reply_text("Range clone cancelled.", reply_markup=main_menu())
+        return MAIN_MENU
     
     try:
         start_id = context.user_data["range_start"]
         end_id = int(text)
         await update.message.reply_text(f"🚀 Starting clone for messages {start_id} to {end_id}...")
         asyncio.create_task(clone_worker(start_id=start_id, end_id=end_id))
-        await update.message.reply_text("📥 Range clone started.", reply_markup=mission_menu())
-        return MISSION
+        await update.message.reply_text("📥 Range clone started.", reply_markup=main_menu())
+        return MAIN_MENU
     except ValueError:
         await update.message.reply_text("❌ Invalid message ID. Must be a number.")
         return WAITING_FOR_RANGE_END
@@ -220,14 +220,14 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🚀 Starting full clone...")
     asyncio.create_task(clone_worker())
-    await update.message.reply_text("📥 Cloning started...", reply_markup=mission_menu())
-    return MISSION
+    await update.message.reply_text("📥 Cloning started...", reply_markup=main_menu())
+    return MAIN_MENU
 
 async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with open(STOP_FLAG, "w") as f:
         f.write("stop")
-    await update.message.reply_text("⛔ Clone stopped.", reply_markup=mission_menu())
-    return MISSION
+    await update.message.reply_text("⛔ Clone stopped.", reply_markup=main_menu())
+    return MAIN_MENU
 
 async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     shared = update.message.chat_shared
@@ -262,7 +262,6 @@ def main():
                 MessageHandler(filters.Regex("^Phone No\.$"), request_phone),
                 MessageHandler(filters.Regex("^Login$"), login),
                 MessageHandler(filters.Regex("^Logout$"), logout),
-                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             WAITING_FOR_API_ID: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_id),
@@ -275,13 +274,11 @@ def main():
             ],
             SOURCE_TARGET: [
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, chat_shared_handler),
-                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             MISSION: [
                 MessageHandler(filters.Regex("^Full Clone$"), full_clone),
                 MessageHandler(filters.Regex("^Range Clone$"), request_range_start),
                 MessageHandler(filters.Regex("^Stop$"), stop_clone),
-                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             WAITING_FOR_RANGE_START: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_start),
@@ -290,7 +287,10 @@ def main():
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_end),
             ],
         },
-        fallbacks=[MessageHandler(filters.Regex("^⬅ Back$"), back_to_main)],
+        fallbacks=[
+            MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+            MessageHandler(filters.Regex("^skip$"), back_to_main),
+        ],
     )
 
     app.add_handler(conv_handler)
