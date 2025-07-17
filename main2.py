@@ -67,12 +67,43 @@ def source_target_menu():
         ["⬅ Back"]
     ], resize_keyboard=True)
 
-def mission_menu():
-    return ReplyKeyboardMarkup([
+#def mission_menu():
+#    return ReplyKeyboardMarkup([
+#        ["Full Clone", "Range Clone"],
+#        [ "Stop""⬅ Back", "skip"]
+#    ], resize_keyboard=True)
+def mission_menu(show_resume=False):
+    buttons = [
         ["Full Clone", "Range Clone"],
         ["Stop", "⬅ Back", "skip"]
-    ], resize_keyboard=True)
+    ]
+    
+    # Conditionally add Resume button above Stop row
+    if show_resume:
+        buttons.insert(1, ["Resume Clone"])
+    
+    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+# Add to your utils section
+def save_clone_state(start_id=None, end_id=None):
+    state = {
+        'last_start': start_id,
+        'last_end': end_id,
+        'timestamp': datetime.now().isoformat()
+    }
+    with open('clone_state.json', 'w') as f:
+        json.dump(state, f)
 
+def load_clone_state():
+    try:
+        with open('clone_state.json') as f:
+            return json.load(f)
+    except:
+        return None
+
+def clear_clone_state():
+    if os.path.exists('clone_state.json'):
+        os.remove('clone_state.json')
+        
 # ---------------------- STATES ----------------------
 (
     MAIN_MENU,
@@ -365,6 +396,34 @@ async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⛔ Clone stopped.", reply_markup=mission_menu())
     return MISSION
 
+async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    state = load_clone_state()
+    if not state:
+        await update.message.reply_text("⚠️ No previous clone operation to resume", reply_markup=mission_menu())
+        return MISSION
+    
+    try:
+        start_id = state.get('last_start')
+        end_id = state.get('last_end')
+        
+        await update.message.reply_text(
+            f"🔄 Resuming clone from {start_id or 'start'} to {end_id or 'end'}...",
+            reply_markup=mission_menu()
+        )
+        
+        # Start the clone worker with previous parameters
+        asyncio.create_task(clone_worker(
+            context=context,
+            chat_id=update.effective_chat.id,
+            start_id=start_id,
+            end_id=end_id
+        ))
+        
+    except Exception as e:
+        await update.message.reply_text(f"❌ Failed to resume: {str(e)}", reply_markup=mission_menu())
+    
+    return MISSION
+    
 async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
@@ -448,11 +507,12 @@ def main():
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             MISSION: [
-                CommandHandler("start", start),
                 MessageHandler(filters.Regex("^Full Clone$"), full_clone),
                 MessageHandler(filters.Regex("^Range Clone$"), request_range_start),
+                MessageHandler(filters.Regex("^Resume Clone$"), resume_clone),  # New handler
                 MessageHandler(filters.Regex("^Stop$"), stop_clone),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+                CommandHandler("start", start),
             ],
             WAITING_FOR_RANGE_START: [
                 CommandHandler("start", start),
