@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# VSCode or IDE settings
+.vscode/
+.idea/
+
+# Env files
+.env
+*.env
+
+# Session and runtime
+anon.session
+sent_ids.txt
+errors.txt
+stop.flag
+
+# Logs
+*.log
+
+# Bytecode
+*.bak
+*.swp
+
+# JSON files with secrets or runtime data
+config.json
+bot.json
+
+# Clone media downloads (if any are saved temporarily)
+downloads/
