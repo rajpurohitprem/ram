@@ -347,7 +347,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     # Add global /start command that works everywhere
-    app.add_handler(CommandHandler("start", start))
+    #app.add_handler(CommandHandler("start", start))
     
     # Conversation Handler
     conv_handler = ConversationHandler(
