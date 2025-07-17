@@ -30,6 +30,8 @@ def save_json(data):
         json.dump(data, f, indent=2)
 
 async def clone_worker(start_id=None, end_id=None):
+    if os.path.exists("stop.flag"):
+        os.remove("stop.flag")
     config = load_json()
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
     await client.start(phone=config["phone"])
@@ -72,6 +74,8 @@ async def clone_worker(start_id=None, end_id=None):
     for msg in tqdm(all_messages, desc="Cloning"):
         if os.path.exists(STOP_FILE):
             print("⛔ Stop file detected. Halting...")
+            os.remove("stop.flag")
+            
             break
         if not isinstance(msg, Message) or msg.id in sent_ids:
             continue
@@ -91,9 +95,10 @@ async def clone_worker(start_id=None, end_id=None):
 
         except Exception as e:
             log_error(f"Failed to send message {msg.id}: {e}")
-
+        finally:
+        # Final cleanup if needed
+        if os.path.exists("stop.flag"):
+            os.remove("stop.flag")
+    
     print("✅ Cloning complete.")
-    if os.path.exists(STOP_FILE):
-        os.remove(STOP_FLAG)
-    continue 
     await client.disconnect()
