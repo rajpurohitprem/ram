@@ -154,13 +154,13 @@ async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return MAIN_MENU
 
 # ---------------------- MAIN ----------------------
-
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Add global /start command
+    # Add global /start command that works everywhere
     app.add_handler(CommandHandler("start", start))
     
+    # Conversation Handler
     conv_handler = ConversationHandler(
         entry_points=[
             MessageHandler(filters.Regex("^User Config$"), user_config),
@@ -172,8 +172,53 @@ def main():
                 MessageHandler(filters.Regex("^User Config$"), user_config),
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+                CommandHandler("start", start),
             ],
-            # ... [other states with CommandHandler('start', start) added] ...
+            USER_CONFIG: [
+                CommandHandler("start", start),
+                MessageHandler(filters.Regex("^Api ID$"), request_api_id),
+                MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
+                MessageHandler(filters.Regex("^Phone No\.$"), request_phone),
+                MessageHandler(filters.Regex("^Login$"), login),
+                MessageHandler(filters.Regex("^Logout$"), logout),
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+            ],
+            WAITING_FOR_API_ID: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_id),
+            ],
+            WAITING_FOR_API_HASH: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_hash),
+            ],
+            WAITING_FOR_PHONE: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, save_phone),
+            ],
+            WAITING_FOR_CODE: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, verify_code),
+            ],
+            SOURCE_TARGET: [
+                CommandHandler("start", start),
+                MessageHandler(filters.StatusUpdate.CHAT_SHARED, chat_shared_handler),
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+            ],
+            MISSION: [
+                CommandHandler("start", start),
+                MessageHandler(filters.Regex("^Full Clone$"), full_clone),
+                MessageHandler(filters.Regex("^Range Clone$"), request_range_start),
+                MessageHandler(filters.Regex("^Stop$"), stop_clone),
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+            ],
+            WAITING_FOR_RANGE_START: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_start),
+            ],
+            WAITING_FOR_RANGE_END: [
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_end),
+            ],
         },
         fallbacks=[
             CommandHandler("start", start),
@@ -183,8 +228,10 @@ def main():
     )
 
     app.add_handler(conv_handler)
-    print("🤖 Bot Is Running")
+    
+    # Add error handler
+    app.add_error_handler(error_handler)
+    
+    # Startup message
+    print("🤖 Bot is running and ready")
     app.run_polling()
-
-if __name__ == "__main__":
-    main()
