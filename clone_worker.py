@@ -93,4 +93,7 @@ async def clone_worker(start_id=None, end_id=None):
             log_error(f"Failed to send message {msg.id}: {e}")
 
     print("✅ Cloning complete.")
+    if os.path.exists(STOP_FILE):
+        os.remove(STOP_FLAG)
+    continue 
     await client.disconnect()
