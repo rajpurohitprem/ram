@@ -100,7 +100,7 @@ async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start"::
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("User Config:", reply_markup=user_config_menu())
@@ -108,7 +108,7 @@ async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def source_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("Select source or target channel.", reply_markup=source_target_menu())
@@ -116,7 +116,7 @@ async def source_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start_mission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("Choose clone mode:", reply_markup=mission_menu())
@@ -124,7 +124,7 @@ async def start_mission(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def request_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("Please send your API ID:")
@@ -132,7 +132,7 @@ async def request_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def request_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("Please send your API Hash:")
@@ -140,7 +140,7 @@ async def request_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def request_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     config = load_config()
@@ -150,7 +150,7 @@ async def request_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     config = load_config()
@@ -195,7 +195,7 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def verify_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     code = update.message.text.replace(" ", "")  # Remove spaces from "1 2 3 4 5" format
@@ -227,7 +227,7 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     text = update.message.text
@@ -245,7 +245,7 @@ async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     text = update.message.text
@@ -259,7 +259,7 @@ async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     text = update.message.text
@@ -273,7 +273,7 @@ async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def request_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("Send start message ID:")
@@ -281,7 +281,7 @@ async def request_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     text = update.message.text
@@ -299,7 +299,7 @@ async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     text = update.message.text
@@ -320,7 +320,7 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("🚀 Starting full clone...")
@@ -330,7 +330,7 @@ async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     with open(STOP_FLAG, "w") as f:
@@ -340,7 +340,7 @@ async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     shared = update.message.chat_shared
