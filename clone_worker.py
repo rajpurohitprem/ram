@@ -95,7 +95,6 @@ async def clone_worker(start_id=None, end_id=None):
 
         except Exception as e:
             log_error(f"Failed to send message {msg.id}: {e}")
-        finally:
         # Final cleanup if needed
         if os.path.exists("stop.flag"):
             os.remove("stop.flag")
