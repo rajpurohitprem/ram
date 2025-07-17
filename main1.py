@@ -65,6 +65,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("User Config"), handle_start_mission))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Start Mission"), handle_start_mission))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Source/Target"), chat_shared_handler))
     app.add_handler(MessageHandler(filters.TEXT & filters.Regex("Full Clone"), handle_full_clone))
     app.add_handler(MessageHandler(filters.ALL, chat_shared_handler))
     app.run_polling()
