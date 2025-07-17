@@ -322,7 +322,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     # Global commands
-    app.add_handler(CommandHandler("start", start))
+    #app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", lambda u,c: u.message.reply_text(
         "Help:\n"
         "/start - Main menu\n"
