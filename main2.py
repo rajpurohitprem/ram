@@ -303,7 +303,7 @@ def main():
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
-                app.add_handler(CommandHandler("start", start),
+                app.add_handler(CommandHandler("start", start)),
             ],
             USER_CONFIG: [
                 MessageHandler(filters.Regex("^Api ID$"), request_api_id),
@@ -312,7 +312,7 @@ def main():
                 MessageHandler(filters.Regex("^Login$"), login),
                 MessageHandler(filters.Regex("^Logout$"), logout),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
-                app.add_handler(CommandHandler("start", start),
+                app.add_handler(CommandHandler("start", start)),
             ],
             WAITING_FOR_API_ID: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_id),
