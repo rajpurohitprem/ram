@@ -17,6 +17,7 @@ from telegram.ext import (
 )
 from clone_worker import clone_worker  # Removed duplicate import
 from telethon.sync import TelegramClient
+from telegram.constants import ParseMode
 
 CONFIG_FILE = "config.json"
 BOT_FILE = "bot.json"
@@ -292,6 +293,16 @@ async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
+    async def post_init(application: Application):
+        await application.bot.send_message
+        (
+            chat_id=application.bot.id,  # Sends to bot's own chat
+            text="🤖 <b>Bot is running</b>",
+            parse_mode=ParseMode.HTML
+        )
+
+    app.add_handler(CommandHandler("start", start))
+    
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -346,6 +357,6 @@ def main():
 
     app.add_handler(conv_handler)
     app.run_polling()
-
+printf("🤖 Bot Is Running")
 if __name__ == "__main__":
     main()
