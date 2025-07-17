@@ -349,6 +349,6 @@ def main():
 
     app.add_handler(conv_handler)
     app.run_polling()
-printf("🤖 Bot Is Running")
+print("🤖 Bot Is Running")
 if __name__ == "__main__":
     main()
