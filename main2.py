@@ -106,7 +106,7 @@ async def check_start_command(update: Update, text: str):
 # Modified handlers with start command check
 async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
-        break
+            break
         return MAIN_MENU
     await update.message.reply_text("User Config:", reply_markup=user_config_menu())
     return USER_CONFIG
