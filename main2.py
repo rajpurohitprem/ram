@@ -92,6 +92,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome! Use buttons to configure and start cloning.", reply_markup=main_menu())
     return MAIN_MENU
 
+
+async def back(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Welcome! Use buttons to configure and start cloning.", reply_markup=main_menu())
+    return MAIN_MENU
+
 async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Main Menu:", reply_markup=main_menu())
     return MAIN_MENU
