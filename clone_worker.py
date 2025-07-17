@@ -1,130 +1,96 @@
 import os
 import json
 import asyncio
-from telethon.sync import TelegramClient
-from telethon.tl.types import MessageService
-from telethon.errors import FloodWaitError
-from telethon.tl.types import DocumentAttributeFilename
+from telethon import TelegramClient
+from telethon.tl.functions.messages import GetHistoryRequest, UpdatePinnedMessageRequest
+from telethon.tl.types import Message
+from tqdm import tqdm
 
 CONFIG_FILE = "config.json"
-SESSION_FILE = "anon.session"
-CHECKPOINT_FILE = "checkpoint.json"
+SESSION_FILE = "anon"
+SENT_LOG = "sent_ids.txt"
+ERROR_LOG = "errors.txt"
+STOP_FILE = "stop.flag"
 
-# Status variables
-active = False
-status_chat_id = None
+open(SENT_LOG, "a").close()
+open(ERROR_LOG, "a").close()
 
-def is_cloning_active():
-    return active
+def log_error(msg):
+    with open(ERROR_LOG, "a") as f:
+        f.write(msg + "\n")
 
-def stop_cloning():
-    global active
-    active = False
+def load_json():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
-def save_checkpoint(message_id):
-    with open(CHECKPOINT_FILE, "w") as f:
-        json.dump({"last_id": message_id}, f)
+def save_json(data):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
-def load_checkpoint():
-    if os.path.exists(CHECKPOINT_FILE):
-        with open(CHECKPOINT_FILE) as f:
-            return json.load(f).get("last_id", 0)
-    return 0
+async def clone_worker(start_id=None, end_id=None):
+    config = load_json()
+    client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
+    await client.start(phone=config["phone"])
 
-async def send_status(message: str):
-    from telegram import Bot
-    with open("bot.json") as f:
-        bot_token = json.load(f)["bot_token"]
-    bot = Bot(bot_token)
-    if status_chat_id:
+    def normalize_channel_id(cid):
+        cid = str(cid)
+        return int(cid) if cid.startswith("-100") else int("-100" + cid)
+
+    src_entity = await client.get_entity(normalize_channel_id(config["source_channel_id"]))
+    tgt_entity = await client.get_entity(normalize_channel_id(config["target_channel_id"]))
+
+    with open(SENT_LOG, "r") as f:
+        sent_ids = set(map(int, f.read().split()))
+
+    offset_id = 0
+    limit = 100
+    all_messages = []
+
+    while True:
+        history = await client(GetHistoryRequest(
+            peer=src_entity,
+            offset_id=offset_id,
+            offset_date=None,
+            add_offset=0,
+            limit=limit,
+            max_id=0,
+            min_id=0,
+            hash=0
+        ))
+        if not history.messages:
+            break
+        all_messages.extend(history.messages)
+        offset_id = history.messages[-1].id
+
+    all_messages.reverse()
+
+    if start_id and end_id:
+        all_messages = [msg for msg in all_messages if start_id <= msg.id <= end_id]
+
+    for msg in tqdm(all_messages, desc="Cloning"):
+        if os.path.exists(STOP_FILE):
+            print("⛔ Stop file detected. Halting...")
+            break
+        if not isinstance(msg, Message) or msg.id in sent_ids:
+            continue
+
         try:
-            await bot.send_message(chat_id=status_chat_id, text=message)
-        except:
-            pass
+            if msg.media:
+                file_path = await client.download_media(msg)
+                await client.send_file(tgt_entity, file_path, caption=msg.text or msg.message or "")
+                os.remove(file_path)
+            elif msg.text or msg.message:
+                await client.send_message(tgt_entity, msg.text or msg.message)
 
-def start_clone_full():
-    asyncio.run(clone_full())
+            with open(SENT_LOG, "a") as f:
+                f.write(f"{msg.id}\n")
 
-def start_clone_range(start_id: int, end_id: int):
-    asyncio.run(clone_range(start_id, end_id))
+            await asyncio.sleep(1)
 
-# Main Full Clone Logic
-async def clone_full():
-    global active, status_chat_id
-    active = True
+        except Exception as e:
+            log_error(f"Failed to send message {msg.id}: {e}")
 
-    config = load_config()
-    source = int(config["source_channel_id"])
-    target = int(config["target_channel_id"])
-    status_chat_id = int(config["status_chat_id"])
-
-    last_id = load_checkpoint()
-
-    async with TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"]) as client:
-        async for message in client.iter_messages(source, min_id=last_id):
-            if not active:
-                await send_status("🛑 Clone stopped by user.")
-                return
-            try:
-                await copy_message(client, message, target)
-                save_checkpoint(message.id)
-            except FloodWaitError as e:
-                await send_status(f"⏳ Flood wait: sleeping for {e.seconds} seconds.")
-                await asyncio.sleep(e.seconds)
-            except Exception as e:
-                await send_status(f"❌ Error copying message {message.id}: {e}")
-                continue
-        await send_status("✅ Full Clone Complete!")
-        active = False
-
-# Range Clone
-async def clone_range(start_id: int, end_id: int):
-    global active, status_chat_id
-    active = True
-
-    config = load_config()
-    source = int(config["source_channel_id"])
-    target = int(config["target_channel_id"])
-    status_chat_id = int(config["status_chat_id"])
-
-    async with TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"]) as client:
-        for message_id in range(start_id, end_id + 1):
-            if not active:
-                await send_status("🛑 Range Clone Stopped.")
-                return
-            try:
-                msg = await client.get_messages(source, ids=message_id)
-                if msg:
-                    await copy_message(client, msg, target)
-                    save_checkpoint(message_id)
-            except Exception as e:
-                await send_status(f"⚠️ Failed message {message_id}: {e}")
-                continue
-        await send_status("✅ Range Clone Complete.")
-        active = False
-
-# Copy One Message At a Time
-async def copy_message(client, message, target):
-    if isinstance(message, MessageService):
-        return  # skip joins/pins/etc
-
-    # Forward text/photo/etc
-    if message.media is None:
-        await client.send_message(target, message.text or "")
-    else:
-        file_path = await message.download_media(file="./temp/")
-        if message.document:
-            attributes = message.document.attributes
-            filename = None
-            for attr in attributes:
-                if isinstance(attr, DocumentAttributeFilename):
-                    filename = attr.file_name
-                    break
-            await client.send_file(target, file_path, caption=message.text or "", file_name=filename)
-        else:
-            await client.send_file(target, file_path, caption=message.text or "")
-        os.remove(file_path)
-
-def load_config():
-    with open(CONFIG_FILE) as f:
-        return json.load(f)
+    print("✅ Cloning complete.")
+    await client.disconnect()
