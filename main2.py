@@ -100,7 +100,7 @@ async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if text.lower() == "start"::
+    if text.lower() == "start":
         await update.message.reply_text("welcome Home.", reply_markup=main_menu())
         return MAIN_MENU
     await update.message.reply_text("User Config:", reply_markup=user_config_menu())
