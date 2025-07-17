@@ -92,96 +92,129 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    if text == "User Config":
-        await update.message.reply_text("User Config:", reply_markup=user_config_menu())
+    hash = update.message.text
+    if hash.lower() != "skip":
 
-    elif text == "Api ID":
-        await update.message.reply_text("Please send your API ID:")
-        return WAITING_FOR_API_ID
-
-    elif text == "Api Hash":
-        await update.message.reply_text("Please send your API Hash:")
-        return WAITING_FOR_API_HASH
-
-    elif text == "Phone No.":
-        config = load_config()
-        current = config.get("phone", "Not Set")
-        await update.message.reply_text(f"Current number: `{current}`\nSend new phone number or type 'skip' to keep.", parse_mode="Markdown")
-        return WAITING_FOR_PHONE
-
-    elif text == "Login":
-        config = load_config()
-        if not all(k in config for k in ("api_id", "api_hash", "phone")):
-            await update.message.reply_text("Please configure API ID, Hash, and Phone first.")
-            return
-        client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
-        await client.connect()
-        if not await client.is_user_authorized():
-            await client.send_code_request(config["phone"])
-            await update.message.reply_text("📲 Code sent. Please reply with the code:")
-            context.user_data["client"] = client
-            return ConversationHandler.END
-        await update.message.reply_text("✅ Already logged in.")
-        await client.disconnect()
-
-    elif text == "Logout":
-        if os.path.exists(SESSION_FILE):
-            os.remove(SESSION_FILE)
-            await update.message.reply_text("🔒 Logged out and session removed.")
-        else:
-            await update.message.reply_text("No session to remove.")
-
-    elif text == "Source/Target":
-        await update.message.reply_text("Select source or target channel.", reply_markup=source_target_menu())
-
-    elif text == "Start Mission":
-        await update.message.reply_text("Choose clone mode:", reply_markup=mission_menu())
-
-    elif text == "Full Clone":
-        await update.message.reply_text("🚀 Starting full clone...")
-        asyncio.create_task(clone_worker())
-        await update.message.reply_text("📥 Cloning started...")
-
-    elif text == "Range Clone":
-        await update.message.reply_text("Send start message ID:")
-        return WAITING_FOR_RANGE_START
-
-    elif text == "Stop":
-        with open(STOP_FLAG, "w") as f:
-            f.write("stop")
-        await update.message.reply_text("⛔ Clone stopped.")
-
-    elif text == "⬅ Back":
-        await update.message.reply_text("Main Menu:", reply_markup=main_menu())
+        if text == "User Config":
+            await update.message.reply_text("User Config:", reply_markup=user_config_menu())
+    
+        elif text == "Api ID":
+            await update.message.reply_text("Please send your API ID:")
+            return WAITING_FOR_API_ID
+    
+        elif text == "Api Hash":
+            await update.message.reply_text("Please send your API Hash:")
+            return WAITING_FOR_API_HASH
+    
+        elif text == "Phone No.":
+            config = load_config()
+            current = config.get("phone", "Not Set")
+            await update.message.reply_text(f"Current number: `{current}`\nSend new phone number or type 'skip' to keep.", parse_mode="Markdown")
+            return WAITING_FOR_PHONE
+    
+        elif text == "Login":
+            config = load_config()
+            if not all(k in config for k in ("api_id", "api_hash", "phone")):
+                await update.message.reply_text("Please configure API ID, Hash, and Phone first.")
+                return
+            client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
+            await client.connect()
+            if not await client.is_user_authorized():
+                await client.send_code_request(config["phone"])
+                await update.message.reply_text("📲 Code sent. Please reply with the code:")
+                context.user_data["client"] = client
+                return ConversationHandler.END
+            await update.message.reply_text("✅ Already logged in.")
+            await client.disconnect()
+    
+        elif text == "Logout":
+            if os.path.exists(SESSION_FILE):
+                os.remove(SESSION_FILE)
+                await update.message.reply_text("🔒 Logged out and session removed.")
+            else:
+                await update.message.reply_text("No session to remove.")
+    
+        elif text == "Source/Target":
+            await update.message.reply_text("Select source or target channel.", reply_markup=source_target_menu())
+    
+        elif text == "Start Mission":
+            await update.message.reply_text("Choose clone mode:", reply_markup=mission_menu())
+    
+        elif text == "Full Clone":
+            await update.message.reply_text("🚀 Starting full clone...")
+            asyncio.create_task(clone_worker())
+            await update.message.reply_text("📥 Cloning started...")
+    
+        elif text == "Range Clone":
+            await update.message.reply_text("Send start message ID:")
+            return WAITING_FOR_RANGE_START
+    
+        elif text == "Stop":
+            with open(STOP_FLAG, "w") as f:
+                f.write("stop")
+            await update.message.reply_text("⛔ Clone stopped.")
+    
+        elif text == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu())
+    else:
+        await update.message.reply_text("No changes made.")
+    return ConversationHandler.END
 
 # SET RANGE
 
 async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["range_start"] = int(update.message.text)
-    await update.message.reply_text("Now send end message ID:")
-    return WAITING_FOR_RANGE_END
+    hash = update.message.text
+    if hash.lower() != "skip":
+        if hash == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            context.user_data["range_start"] = int(update.message.text)
+            await update.message.reply_text("Now send end message ID:")
+            return WAITING_FOR_RANGE_END
+    else:
+        await update.message.reply_text("No changes made.")
+    return ConversationHandler.END
 
 async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    start = context.user_data["range_start"]
-    end = int(update.message.text)
-    await update.message.reply_text(f"🚀 Starting clone for messages {start} to {end}...")
-    asyncio.create_task(clone_worker_range(start, end))
-    await update.message.reply_text("📥 Range clone started.")
+    hash = update.message.text
+    if hash.lower() != "skip":
+        if hash == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            start = context.user_data["range_start"]
+            end = int(update.message.text)
+            await update.message.reply_text(f"🚀 Starting clone for messages {start} to {end}...")
+            asyncio.create_task(clone_worker_range(start, end))
+            await update.message.reply_text("📥 Range clone started.")
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text("No changes made.")
     return ConversationHandler.END
 
 # CONFIG SETTERS
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ensure_config_key("api_id", int(update.message.text))
-    await update.message.reply_text("✅ API ID saved.", reply_markup=user_config_menu())
+    hash = update.message.text
+    if hash.lower() != "skip":
+        if hash == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            ensure_config_key("api_id", int(update.message.text))
+            await update.message.reply_text("✅ API ID saved.", reply_markup=user_config_menu())
+            return ConversationHandler.END
+    else:
+        await update.message.reply_text("No changes made.")
     return ConversationHandler.END
 
 async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash = update.message.text
     if hash.lower() != "skip":
-        ensure_config_key("api_hash", update.message.text)
-        await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
-        return ConversationHandler.END
+        if hash == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            ensure_config_key("api_hash", update.message.text)
+            await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
+            return ConversationHandler.END
     else:
         await update.message.reply_text("No changes made.")
     return ConversationHandler.END
@@ -190,8 +223,11 @@ async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = update.message.text
     if phone.lower() != "skip":
-        ensure_config_key("phone", phone)
-        await update.message.reply_text("✅ Phone number updated.")
+        if text == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            ensure_config_key("phone", phone)
+            await update.message.reply_text("✅ Phone number updated.")
     else:
         await update.message.reply_text("No changes made.")
     return ConversationHandler.END
@@ -199,15 +235,22 @@ async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # CHANNEL HANDLER
 async def chat_shared_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     shared = update.message.chat_shared
-    if not shared:
-        return
-    if shared.request_id == 1:
-        ensure_config_key("source_channel_id", shared.chat_id)
-        await update.message.reply_text(f"✅ Source channel set: `{shared.chat_id}`", parse_mode="Markdown")
-    elif shared.request_id == 2:
-        ensure_config_key("target_channel_id", shared.chat_id)
-        await update.message.reply_text(f"✅ Target channel set: `{shared.chat_id}`", parse_mode="Markdown")
-
+    hash = update.message.text
+    if hash.lower() != "skip":
+        if hash == "⬅ Back":
+            await update.message.reply_text("Main Menu:", reply_markup=main_menu()
+        else:
+            if not shared:
+                return
+            if shared.request_id == 1:
+                ensure_config_key("source_channel_id", shared.chat_id)
+                await update.message.reply_text(f"✅ Source channel set: `{shared.chat_id}`", parse_mode="Markdown")
+            elif shared.request_id == 2:
+                ensure_config_key("target_channel_id", shared.chat_id)
+                await update.message.reply_text(f"✅ Target channel set: `{shared.chat_id}`", parse_mode="Markdown")
+    else:
+        await update.message.reply_text("No changes made.")
+    return ConversationHandler.END
 # Track clone state
 user_states = {}
 
