@@ -106,30 +106,35 @@ async def check_start_command(update: Update, text: str):
 # Modified handlers with start command check
 async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
+        break
         return MAIN_MENU
     await update.message.reply_text("User Config:", reply_markup=user_config_menu())
     return USER_CONFIG
 
 async def source_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
+        break
         return MAIN_MENU
     await update.message.reply_text("Select source or target channel.", reply_markup=source_target_menu())
     return SOURCE_TARGET
 
 async def start_mission(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
+        break
         return MAIN_MENU
     await update.message.reply_text("Choose clone mode:", reply_markup=mission_menu())
     return MISSION
 
 async def request_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
+        break
         return MAIN_MENU
     await update.message.reply_text("Please send your API ID:")
     return WAITING_FOR_API_ID
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
+        break
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
