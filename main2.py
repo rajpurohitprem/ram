@@ -178,7 +178,7 @@ async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash = update.message.text
-    if phone.lower() != "skip":
+    if hash.lower() != "skip":
         ensure_config_key("api_hash", update.message.text)
         await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
         return ConversationHandler.END
