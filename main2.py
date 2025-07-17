@@ -79,11 +79,12 @@ def mission_menu():
     WAITING_FOR_API_ID,
     WAITING_FOR_API_HASH,
     WAITING_FOR_PHONE,
+    WAITING_FOR_CODE,  # Add this new state
     SOURCE_TARGET,
     MISSION,
     WAITING_FOR_RANGE_START,
     WAITING_FOR_RANGE_END
-) = range(9)
+) = range(10)  # Changed from 9 to 10
 
 # ---------------------- HANDLERS ----------------------
 
@@ -127,6 +128,28 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Please configure API ID, Hash, and Phone first.")
         return USER_CONFIG
     
+    try:
+        client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
+        await client.connect()
+        
+        if not await client.is_user_authorized():
+            sent_code = await client.send_code_request(config["phone"])
+            context.user_data["client"] = client
+            context.user_data["phone"] = config["phone"]
+            context.user_data["phone_code_hash"] = sent_code.phone_code_hash
+            
+            await update.message.reply_text(
+                "📲 Code sent. Please reply with the code in format: 1 2 3 4 5\n"
+                "(Enter the numbers separated by spaces)"
+            )
+            return WAITING_FOR_CODE
+        
+        await update.message.reply_text("✅ Already logged in.", reply_markup=main_menu())
+        await client.disconnect()
+        return MAIN_MENU
+    except Exception as e:
+        await update.message.reply_text(f"❌ Login failed: {str(e)}")
+        return USER_CONFIG   
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
     await client.connect()
     
@@ -140,6 +163,26 @@ async def login(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await client.disconnect()
     return USER_CONFIG
 
+async def verify_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    code = update.message.text.replace(" ", "")  # Remove spaces from "1 2 3 4 5" format
+    if not code.isdigit() or len(code) != 5:
+        await update.message.reply_text("❌ Invalid code format. Please send 5 digits (e.g., '1 2 3 4 5')")
+        return WAITING_FOR_CODE
+    
+    try:
+        client = context.user_data["client"]
+        await client.sign_in(
+            phone=context.user_data["phone"],
+            code=code,
+            phone_code_hash=context.user_data["phone_code_hash"]
+        )
+        await update.message.reply_text("✅ Login successful!", reply_markup=main_menu())
+        await client.disconnect()
+        return MAIN_MENU
+    except Exception as e:
+        await update.message.reply_text(f"❌ Verification failed: {str(e)}\nPlease try again:")
+        return WAITING_FOR_CODE
+        
 async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if os.path.exists(SESSION_FILE):
         os.remove(SESSION_FILE)
@@ -289,9 +332,15 @@ def main():
             WAITING_FOR_RANGE_END: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_end),
             ],
-        },
-        fallbacks=[MessageHandler(filters.Regex("^⬅ Back$"), back_to_main)],
-    )
+            WAITING_FOR_CODE: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, verify_code),
+        ],
+    },
+    fallbacks=[
+        MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+        MessageHandler(filters.Regex("^skip$"), back_to_main),
+    ],
+)
 
     app.add_handler(conv_handler)
     app.run_polling()
