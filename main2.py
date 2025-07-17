@@ -15,7 +15,7 @@ from telegram.ext import (
     ContextTypes,
     ConversationHandler,
 )
-from clone_worker import clone_worker, clone_worker_range
+from clone_worker import clone_worker, clone_worker
 from telethon.sync import TelegramClient
 
 CONFIG_FILE = "config.json"
