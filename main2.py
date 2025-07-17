@@ -153,6 +153,9 @@ async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("📥 Cloning started...", reply_markup=main_menu())
     return MAIN_MENU
 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    print(f"Error occurred: {context.error}")
+    
 # ---------------------- MAIN ----------------------
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
@@ -230,7 +233,7 @@ def main():
     app.add_handler(conv_handler)
     
     # Add error handler
-    #app.add_error_handler(error_handler)
+    app.add_error_handler(error_handler)
     
     # Startup message
     print("🤖 Bot is running and ready")
