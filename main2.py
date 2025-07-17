@@ -56,7 +56,7 @@ def main_menu():
 def user_config_menu():
     return ReplyKeyboardMarkup([
         ["Api ID", "Api Hash", "Phone No."],
-        ["Login", "Logout"],
+        ["Login", "Logout","Show Config"],
         ["⬅ Back", "skip"]
     ], resize_keyboard=True)
 
@@ -112,6 +112,27 @@ async def user_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("User Config:", reply_markup=user_config_menu())
     return USER_CONFIG
 
+async def show_config(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        config = load_config()
+        formatted_config = json.dumps(config, indent=2)
+        
+        # Truncate if too long for Telegram
+        if len(formatted_config) > 4000:
+            formatted_config = formatted_config[:4000] + "\n... (truncated)"
+        
+        await update.message.reply_text(
+            f"<pre>Current Config:\n{formatted_config}</pre>",
+            parse_mode=ParseMode.HTML,
+            reply_markup=user_config_menu()
+        )
+    except Exception as e:
+        await update.message.reply_text(
+            f"❌ Error loading config: {str(e)}",
+            reply_markup=user_config_menu()
+        )
+    return USER_CONFIG
+    
 async def source_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
@@ -220,10 +241,8 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return USER_CONFIG
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text.lower() == "/start":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
+    if await check_start_command(update, update.message.text):
+        return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
         await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
@@ -247,9 +266,19 @@ async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
         return USER_CONFIG
     
-    ensure_config_key("api_hash", text)
-    await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
-    return USER_CONFIG
+    
+    if len(text) == 32 and all(c in '0123456789abcdef' for c in text.lower()):
+        ensure_config_key("api_hash", text)
+        await update.message.reply_text("✅ API Hash saved!", reply_markup=main_menu())
+        return MAIN_MENU
+    else:
+        await update.message.reply_text(
+            "❌ Invalid API Hash!\n"
+            "Must be 32-character hexadecimal string\n"
+            "Example: 1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p",
+            reply_markup=user_config_menu()
+        )
+        return WAITING_FOR_API_HASH
 
 async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
@@ -346,8 +375,6 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Add global /start command that works everywhere
-    #app.add_handler(CommandHandler("start", start))
     
     # Conversation Handler
     conv_handler = ConversationHandler(
@@ -371,6 +398,16 @@ def main():
                 MessageHandler(filters.Regex("^Login$"), login),
                 MessageHandler(filters.Regex("^Logout$"), logout),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+            ],
+            USER_CONFIG: [
+                MessageHandler(filters.Regex("^Api ID$"), request_api_id),
+                MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
+                MessageHandler(filters.Regex("^Phone No\.$"), request_phone),
+                MessageHandler(filters.Regex("^Login$"), login),
+                MessageHandler(filters.Regex("^Logout$"), logout),
+                MessageHandler(filters.Regex("^Show Config$"), show_config),  # Added
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
+                CommandHandler("start", start),
             ],
             WAITING_FOR_API_ID: [
                 CommandHandler("start", start),
