@@ -167,13 +167,13 @@ async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if hash.lower() != "skip":
         if hash == "⬅ Back":
             await update.message.reply_text("Main Menu:", reply_markup=main_menu()
-        else
+        else:
             context.user_data["range_start"] = int(update.message.text)
             await update.message.reply_text("Now send end message ID:")
             return WAITING_FOR_RANGE_END
     else:
         await update.message.reply_text("No changes made.")
-    return ConversationHandler.END
+        return ConversationHandler.END
 
 async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
     hash = update.message.text
