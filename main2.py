@@ -230,7 +230,7 @@ def main():
     app.add_handler(conv_handler)
     
     # Add error handler
-    app.add_error_handler(error_handler)
+    #app.add_error_handler(error_handler)
     
     # Startup message
     print("🤖 Bot is running and ready")
