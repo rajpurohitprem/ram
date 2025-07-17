@@ -221,7 +221,7 @@ async def logout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
-        return MAIN_MENU
+        return await start(update, context)
     text = update.message.text
     if text.lower() == "skip":
         await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
