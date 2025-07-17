@@ -398,6 +398,7 @@ def main():
             MessageHandler(filters.Regex("^User Config$"), user_config),
             MessageHandler(filters.Regex("^Source/Target$"), source_target),
             MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+            CommandHandler("start", start),
         ],
         states={
             MAIN_MENU: [
