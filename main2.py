@@ -56,7 +56,7 @@ def user_config_menu():
     return ReplyKeyboardMarkup([
         ["Api ID", "Api Hash", "Phone No."],
         ["Login", "Logout"],
-        ["⬅ Back"]
+        ["⬅ Back","skip"]
     ], resize_keyboard=True)
 
 def source_target_menu():
@@ -69,7 +69,7 @@ def source_target_menu():
 def mission_menu():
     return ReplyKeyboardMarkup([
         ["Full Clone", "Range Clone"],
-        ["Stop", "⬅ Back"]
+        ["Stop", "⬅ Back","skip"]
     ], resize_keyboard=True)
 
 
@@ -177,9 +177,14 @@ async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ensure_config_key("api_hash", update.message.text)
-    await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
+    if phone.lower() != "skip":
+        ensure_config_key("api_hash", update.message.text)
+        await update.message.reply_text("✅ API Hash saved.", reply_markup=user_config_menu())
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text("No changes made.")
     return ConversationHandler.END
+  
 
 async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = update.message.text
