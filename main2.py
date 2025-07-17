@@ -292,7 +292,7 @@ def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("⬅ Back", start)],
+        entry_points=[CommandHandler("start", start)],
         states={
             MAIN_MENU: [
                 MessageHandler(filters.Regex("^User Config$"), user_config),
