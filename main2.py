@@ -311,6 +311,7 @@ def main():
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             USER_CONFIG: [
+                CommandHandler("start", start),
                 MessageHandler(filters.Regex("^Api ID$"), request_api_id),
                 MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
                 MessageHandler(filters.Regex("^Phone No\.$"), request_phone),
@@ -319,32 +320,40 @@ def main():
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             WAITING_FOR_API_ID: [
+                CommandHandler("start", start),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_id),
             ],
             WAITING_FOR_API_HASH: [
+                CommandHandler("start", start),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_api_hash),
             ],
             WAITING_FOR_PHONE: [
+                CommandHandler("start", start),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, save_phone),
             ],
             SOURCE_TARGET: [
+                CommandHandler("start", start),
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, chat_shared_handler),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             MISSION: [
+                CommandHandler("start", start),
                 MessageHandler(filters.Regex("^Full Clone$"), full_clone),
                 MessageHandler(filters.Regex("^Range Clone$"), request_range_start),
                 MessageHandler(filters.Regex("^Stop$"), stop_clone),
                 MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
             ],
             WAITING_FOR_RANGE_START: [
+                CommandHandler("start", start),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_start),
             ],
             WAITING_FOR_RANGE_END: [
+                CommandHandler("start", start),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, set_range_end),
             ],
             WAITING_FOR_CODE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, verify_code),
+                CommandHandler("start", start),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, verify_code),
         ],
     },
     fallbacks=[
