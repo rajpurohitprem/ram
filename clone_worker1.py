@@ -35,7 +35,7 @@ async def clone_worker(start_id=None, end_id=None):
     config = load_json()
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
     await client.start(phone=config["phone"])
-
+    
     def normalize_channel_id(cid):
         cid = str(cid)
         return int(cid) if cid.startswith("-100") else int("-100" + cid)
