@@ -128,6 +128,12 @@ async def request_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Please send your API ID:")
     return WAITING_FOR_API_ID
 
+async def request_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if await check_start_command(update, update.message.text):
+        return MAIN_MENU
+    await update.message.reply_text("Please send your API Hash:")
+    return WAITING_FOR_API_HASH
+
 async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
