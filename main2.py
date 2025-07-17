@@ -297,6 +297,7 @@ def main():
     
     conv_handler = ConversationHandler(
         entry_points=[
+            (CommandHandler("start", start),
             MessageHandler(filters.Regex("^User Config$"), user_config),
             MessageHandler(filters.Regex("^Source/Target$"), source_target),
             MessageHandler(filters.Regex("^Start Mission$"), start_mission),
