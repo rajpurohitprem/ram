@@ -78,16 +78,13 @@ def source_target_menu():
 #        [ "Stop""⬅ Back", "skip"]
 #    ], resize_keyboard=True)
 def mission_menu():
-    buttons = [
+    return ReplyKeyboardMarkup([
         ["Full Clone", "Range Clone"],
+        ["Resume Clone"],
         ["Stop", "⬅ Back", "skip"]
-    ]
+    ], resize_keyboard=True)
+
     
-    # Conditionally add Resume button above Stop row
-    if show_resume:
-        buttons.insert(1, ["Resume Clone"])
-    
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 # Add to your utils section
 def save_clone_state(start_id=None, end_id=None):
     state = {
