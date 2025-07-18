@@ -31,104 +31,99 @@ def load_json(filename):
 class CloneBot:
     def __init__(self):
         self.bot_client = None
-        self.active_chats = set()
+        self.status_chat_id = None
+        self.status_message_id = None
         self.is_cloning = False
-        self.progress_message_id = None
-        self.progress_chat_id = None
         self.allowed_users = set()
         self.current_status = "Idle"
         self.last_update = None
 
-    async def start_bot(self):
+    async def initialize(self):
         bot_config = load_json(BOT_FILE)
         if not bot_config.get("bot_token"):
-            return
+            return False
 
         self.allowed_users = set(bot_config.get("allowed_users", []))
-        
+        if not self.allowed_users:
+            return False
+
         self.bot_client = TelegramClient(
             'bot_session',
             load_json(CONFIG_FILE)["api_id"],
             load_json(CONFIG_FILE)["api_hash"]
         )
 
-        @self.bot_client.on(events.NewMessage())
-        async def message_handler(event):
-            
-
-            if event.text == 'Full Clone'or'Range Clone'or 'Resume Clone':
-                self.active_chats.add(event.chat_id)
-                await self.send_status(event.chat_id)
-                    
         await self.bot_client.start(bot_token=bot_config["bot_token"])
-        asyncio.create_task(self.bot_client.run_until_disconnected())
+        
+        # Automatically select first allowed user as status chat
+        self.status_chat_id = next(iter(self.allowed_users))
+        return True
 
-    async def send_status(self, chat_id=None):
-        
+    async def send_initial_status(self):
+        if not self.bot_client or not self.status_chat_id:
+            return
             
-        status_message = (
-            f"🔄 Current Status: {self.current_status}\n"
-            f"⏰ Last Update: {self.last_update or 'N/A'}\n"
-            "\nUse /stop to cancel operation"
-        )
-        
-        if chat_id:
-            try:
-                await self.bot_client.send_message(chat_id, status_message)
-            except Exception as e:
-                log_error(f"Status send failed: {str(e)}")
+        try:
+            msg = await self.bot_client.send_message(
+                self.status_chat_id,
+                "🔄 Cloning process initialized...\n"
+                "Standby for live progress updates"
+            )
+            self.status_message_id = msg.id
+        except Exception as e:
+            log_error(f"Initial status send failed: {str(e)}")
 
-    async def update_progress(self, message):
-        
-            
+    async def update_status(self, message):
+        if not self.bot_client or not self.status_chat_id:
+            return
+
         self.current_status = message
-        self.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.last_update = datetime.now().strftime("%H:%M:%S")
         
         try:
-            # Create or update progress message
-            if self.progress_message_id and self.progress_chat_id:
+            if self.status_message_id:
                 await self.bot_client.edit_message(
-                    self.progress_chat_id,
-                    self.progress_message_id,
-                    message
+                    self.status_chat_id,
+                    self.status_message_id,
+                    f"🔄 {message}\n"
+                    f"⏰ Last Update: {self.last_update}"
                 )
             else:
-                # Send to first active chat
-                if self.active_chats:
-                    chat_id = next(iter(self.active_chats))
-                    msg = await self.bot_client.send_message(chat_id, message)
-                    self.progress_message_id = msg.id
-                    self.progress_chat_id = chat_id
-                    
-            # Send to other active chats
-            for chat_id in self.active_chats:
-                if chat_id != self.progress_chat_id:
-                    try:
-                        await self.bot_client.send_message(chat_id, message)
-                    except Exception as e:
-                        log_error(f"Progress update failed for {chat_id}: {str(e)}")
-                        
+                msg = await self.bot_client.send_message(
+                    self.status_chat_id,
+                    f"🔄 {message}\n"
+                    f"⏰ Last Update: {self.last_update}"
+                )
+                self.status_message_id = msg.id
         except Exception as e:
-            log_error(f"Progress update failed: {str(e)}")
-            # Reset message tracking if failed
-            self.progress_message_id = None
-            self.progress_chat_id = None
+            log_error(f"Status update failed: {str(e)}")
+            self.status_message_id = None
+
+    async def cleanup(self):
+        if self.bot_client:
+            await self.bot_client.disconnect()
 
 bot = CloneBot()
 
 async def clone_worker(start_id=None, end_id=None):
-    await bot.start_bot()
-    config = load_json(CONFIG_FILE)
+    if not await bot.initialize():
+        print("❌ Bot initialization failed")
+        return
+
+    await bot.send_initial_status()
+    bot.is_cloning = True
     
+    config = load_json(CONFIG_FILE)
     if not all(k in config for k in ["api_id", "api_hash", "phone", "source_channel_id", "target_channel_id"]):
-        await bot.update_progress("❌ Missing configuration in config.json")
+        await bot.update_status("❌ Missing configuration")
+        bot.is_cloning = False
+        await bot.cleanup()
         return
 
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
-    #await client.start(phone=config["phone"])
+    await client.start(phone=config["phone"])
     
-    bot.is_cloning = True
-    await bot.update_progress("🚀 Starting cloning process...")
+    await bot.update_status("🚀 Starting cloning process...")
 
     def normalize_channel_id(cid):
         cid = str(cid)
@@ -138,21 +133,24 @@ async def clone_worker(start_id=None, end_id=None):
         src_entity = await client.get_entity(normalize_channel_id(config["source_channel_id"]))
         tgt_entity = await client.get_entity(normalize_channel_id(config["target_channel_id"]))
     except Exception as e:
-        await bot.update_progress(f"❌ Channel access failed: {str(e)}")
+        await bot.update_status(f"❌ Channel access failed: {str(e)}")
         bot.is_cloning = False
         await client.disconnect()
+        await bot.cleanup()
         return
 
-    with open(SENT_LOG, "r") as f:
-        sent_ids = set(map(int, f.read().split()))
-
     # Message collection
-    await bot.update_progress("📂 Collecting messages from source channel...")
+    await bot.update_status("📂 Collecting messages...")
     all_messages = []
     offset_id = 0
     limit = 100
     
     while True:
+        if os.path.exists(STOP_FILE):
+            await bot.update_status("⛔ Stopped by user request")
+            os.remove(STOP_FILE)
+            break
+
         try:
             history = await client(GetHistoryRequest(
                 peer=src_entity,
@@ -166,34 +164,33 @@ async def clone_worker(start_id=None, end_id=None):
             ))
             if not history.messages:
                 break
+                
             all_messages.extend(history.messages)
             offset_id = history.messages[-1].id
             
-            # Update progress during collection
-            if len(all_messages) % 500 == 0:
-                await bot.update_progress(f"📥 Collected {len(all_messages)} messages so far...")
+            if len(all_messages) % 100 == 0:
+                await bot.update_status(f"📥 Collected {len(all_messages)} messages")
                 
         except Exception as e:
-            await bot.update_progress(f"❌ Error collecting messages: {str(e)}")
+            await bot.update_status(f"❌ Collection error: {str(e)}")
             break
 
     all_messages.reverse()
-    
     if start_id and end_id:
         all_messages = [msg for msg in all_messages if start_id <= msg.id <= end_id]
 
     total_messages = len(all_messages)
     processed = 0
     
-    await bot.update_progress(f"📊 Ready to clone {total_messages} messages")
+    await bot.update_status(f"📊 Ready to clone {total_messages} messages")
 
     # Cloning process
-    progress_interval = max(1, total_messages // 10)  # Update 10 times during process
+    progress_interval = max(5, total_messages // 20)  # Update ~20 times
     
     for msg in tqdm(all_messages, desc="Cloning"):
         if os.path.exists(STOP_FILE):
-            await bot.update_progress("⛔ STOPPED by user request")
-            
+            await bot.update_status(f"⛔ Stopped ({processed}/{total_messages} done)")
+            os.remove(STOP_FILE)
             break
 
         try:
@@ -210,27 +207,29 @@ async def clone_worker(start_id=None, end_id=None):
             processed += 1
             if processed % progress_interval == 0 or processed == total_messages:
                 percent = (processed / total_messages) * 100
-                await bot.update_progress(
-                    f"⏳ Cloning Progress: {processed}/{total_messages} ({percent:.1f}%)\n"
-                    f"🕒 Estimated: {(total_messages - processed) * 1.5:.0f}s remaining"
+                await bot.update_status(
+                    f"⏳ Cloning: {percent:.1f}% complete\n"
+                    f"({processed}/{total_messages} messages)\n"
+                    f"⏱️ ~{(total_messages - processed)//2}s remaining"
                 )
 
-            await asyncio.sleep(1)  # Rate limiting
+            await asyncio.sleep(0.5)  # Rate limiting
 
         except Exception as e:
-            error_msg = f"❌ Failed on message {msg.id}: {str(e)}"
-            log_error(error_msg)
-            await bot.update_progress(error_msg)
+            log_error(f"Message {msg.id} failed: {str(e)}")
+            if processed % 10 == 0:  # Don't spam errors
+                await bot.update_status(f"⚠️ Error on message {msg.id} (continuing)")
 
-    # Completion
-    completion_msg = f"✅ Cloning complete! {processed} messages processed"
+    # Final status
+    completion_msg = f"✅ Completed: {processed}/{total_messages} messages"
     if os.path.exists(STOP_FILE):
-        completion_msg = f"⏹️ Stopped early: {processed}/{total_messages} messages cloned"
+        completion_msg = f"⏹️ Stopped early: {processed}/{total_messages}"
         os.remove(STOP_FILE)
         
-    await bot.update_progress(completion_msg)
+    await bot.update_status(completion_msg)
     bot.is_cloning = False
     await client.disconnect()
+    await bot.cleanup()
 
 if __name__ == "__main__":
     asyncio.run(clone_worker())
