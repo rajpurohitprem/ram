@@ -79,10 +79,7 @@ async def clone_worker(start_id=None, end_id=None):
             break
 
         
-        if not os.path.exists(START_FILE):
-            break
-        if not os.path.exists(RESUME_FILE):
-            break
+        
         try:
             if msg.media:
                 file_path = await client.download_media(msg)
