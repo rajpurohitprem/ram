@@ -75,7 +75,7 @@ async def clone_worker(start_id=None, end_id=None):
     for msg in tqdm(all_messages, desc="Cloning"):
         if os.path.exists(STOP_FILE):
             print("⛔ Stop file detected. Halting...")
-            os.remove("stop.flag")
+            
             break
 
         
