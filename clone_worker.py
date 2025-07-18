@@ -54,9 +54,7 @@ class CloneBot:
 
         @self.bot_client.on(events.NewMessage())
         async def message_handler(event):
-            if event.sender_id not in self.allowed_users:
-                await event.reply("⛔ Unauthorized access denied")
-                return
+            
 
             if event.text == '/start':
                 self.active_chats.add(event.chat_id)
