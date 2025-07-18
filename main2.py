@@ -371,8 +371,8 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=mission_menu())
-        return MISSION
+        await update.message.reply_text("No changes made.", reply_markup=main_menu())
+        return MAIN_MENU
     
     try:
         start_id = context.user_data["range_start"]
