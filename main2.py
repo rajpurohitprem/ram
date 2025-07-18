@@ -82,7 +82,7 @@ def source_target_menu():
 def mission_menu():
     return ReplyKeyboardMarkup([
         ["Full Clone", "Range Clone"],
-        ["Stop","Resume Clone", "⬅ Back"],
+        ["Stop","Resume Clone", "skip"],
         ["Mission Status"],
     ], resize_keyboard=True)
 
