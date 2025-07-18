@@ -399,9 +399,12 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
-        
+
+
     if not os.path.exists(START_FLAG):
         with open(START_FLAG, 'w') as f:
+            pass  # Creates empty file
+    
     if os.path.exists(STOP_FLAG):
         os.remove(STOP_FLAG)
         
@@ -440,6 +443,7 @@ async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not os.path.exists(RESUME_FILE_FLAG):
             with open(RESUME_FLAG, 'w') as f:
+                pass
         if os.path.exists(STOP_FLAG):
             os.remove(STOP_FLAG)
         
