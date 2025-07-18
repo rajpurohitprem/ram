@@ -11,6 +11,8 @@ SESSION_FILE = "anon"
 SENT_LOG = "sent_ids.txt"
 ERROR_LOG = "errors.txt"
 STOP_FILE = "stop.flag"
+START_FILE = "start.flag"
+RESUMR_FILE = "resume.flag"
 
 open(SENT_LOG, "a").close()
 open(ERROR_LOG, "a").close()
@@ -75,11 +77,12 @@ async def clone_worker(start_id=None, end_id=None):
         if os.path.exists(STOP_FILE):
             print("⛔ Stop file detected. Halting...")
             os.remove("stop.flag")
-            
             break
-        if not isinstance(msg, Message) or msg.id in sent_ids:
-            continue
 
+        
+        if not os.path.exists(START_FILE):
+            if not os.path.exists(RESUME_FILE):
+                break
         try:
             if msg.media:
                 file_path = await client.download_media(msg)
@@ -96,8 +99,13 @@ async def clone_worker(start_id=None, end_id=None):
         except Exception as e:
             log_error(f"Failed to send message {msg.id}: {e}")
         # Final cleanup if needed
-        if os.path.exists("stop.flag"):
-            os.remove("stop.flag")
+        
     
     print("✅ Cloning complete.")
+    if os.path.exists("stop.flag"):
+        os.remove("stop.flag")
+    if os.path.exists("resume.flag"):
+        os.remove("resume.flag")
+    if os.path.exists("start.flag"):
+        os.remove("start.flag")
     await client.disconnect()
