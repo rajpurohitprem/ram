@@ -48,20 +48,7 @@ def ensure_config_key(key, value):
     config[key] = value
     save_config(config)
 
-def load_mission():
-    if not os.path.exists(MISSION_FILE):
-        return {}
-    with open(MISSION_FILE) as f:
-        return json.load(f)
 
-def save_mission(data):
-    with open(MISION_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-
-def ensure_mission(key, value):
-    mission = load_config()
-    config[key] = value
-    save_config(mission)
 
 # ---------------------- REPLY KEYBOARDS ----------------------
 
@@ -90,7 +77,7 @@ def source_target_menu():
 #        ["Full Clone", "Range Clone"],
 #        [ "Stop""⬅ Back", "skip"]
 #    ], resize_keyboard=True)
-def mission_menu(show_resume=False):
+def mission_menu():
     buttons = [
         ["Full Clone", "Range Clone"],
         ["Stop", "⬅ Back", "skip"]
