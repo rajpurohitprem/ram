@@ -64,6 +64,7 @@ def user_config_menu():
         ["Api ID", "Api Hash", "Phone No."],
         ["Login", "Logout","Show Config"],
         ["⬅ Back", "skip"],
+        
     ], resize_keyboard=True)
 
 def source_target_menu():
@@ -82,7 +83,8 @@ def mission_menu():
     return ReplyKeyboardMarkup([
         ["Full Clone", "Range Clone"],
         ["Resume Clone"],
-        ["Stop", "⬅ Back", "skip"]
+        ["Stop", "⬅ Back", "skip"],
+        ["Mission Status"],
     ], resize_keyboard=True)
 
     
@@ -509,6 +511,11 @@ def main():
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
                 MessageHandler(filters.Regex("^Mission Status$"), mission_status),
+                MessageHandler(filters.Regex("^Full Clone$"), full_clone),
+                MessageHandler(filters.Regex("^Range Clone$"), request_range_start),
+                MessageHandler(filters.Regex("^Resume Clone$"), resume_clone),  # New handler
+                MessageHandler(filters.Regex("^Stop$"), stop_clone),
+                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
                 CommandHandler("start", start),
             ],
             
