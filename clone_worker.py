@@ -126,16 +126,28 @@ class CloneBot:
 bot = CloneBot()
 
 async def live_updates():
-    """Initialize and maintain live updates during cloning"""
-    if not await bot.initialize():
-        print("❌ Bot initialization failed")
-        return False
-    
-    await bot.send_initial_status()
-    bot.is_cloning = True
-    asyncio.create_task(bot.handle_messages())
-    return True
-
+    """Initialize or reconnect live updates during cloning"""
+    if bot.is_cloning:
+        # If already cloning, just reconnect the messaging
+        if not bot.bot_client or not bot.bot_client.is_connected():
+            if not await bot.initialize():
+                print("❌ Failed to reconnect live updates")
+                return False
+            
+        await bot.send_initial_status()
+        asyncio.create_task(bot.handle_messages())
+        await bot.update_status("🔌 Reconnected live updates to existing clone operation")
+        return True
+    else:
+        # Normal initialization
+        if not await bot.initialize():
+            print("❌ Bot initialization failed")
+            return False
+        
+        await bot.send_initial_status()
+        bot.is_cloning = True
+        asyncio.create_task(bot.handle_messages())
+        return True
 async def clone_worker(start_id=None, end_id=None):
     if not bot.is_cloning:
         if not await live_updates():
