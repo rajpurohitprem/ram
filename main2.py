@@ -287,8 +287,8 @@ async def save_api_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
+        await update.message.reply_text("No changes made.", reply_markup=main_menu())
+        return MAIN_MENU
     
     try:
         if await check_start_command(update, update.message.text):
@@ -305,8 +305,8 @@ async def save_api_hash(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
+        await update.message.reply_text("No changes made.", reply_markup=umain_menu())
+        return MAIN_MENU
     
     
     if len(text) == 32 and all(c in '0123456789abcdef' for c in text.lower()):
@@ -327,8 +327,8 @@ async def save_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=user_config_menu())
-        return USER_CONFIG
+        await update.message.reply_text("No changes made.", reply_markup=main_menu())
+        return MSIN_MENU
     
      # Validation (basic international phone format)
     if text.startswith('+') and text[1:].isdigit() and len(text) >= 8:
@@ -355,8 +355,8 @@ async def set_range_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MAIN_MENU
     text = update.message.text
     if text.lower() == "skip":
-        await update.message.reply_text("No changes made.", reply_markup=mission_menu())
-        return MISSION
+        await update.message.reply_text("No changes made.", reply_markup=main_menu())
+        return MAIN_MENU
     
     try:
         context.user_data["range_start"] = int(text)
