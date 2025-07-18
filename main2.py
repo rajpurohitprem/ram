@@ -56,14 +56,14 @@ def main_menu():
     return ReplyKeyboardMarkup([
         ["User Config", "Source/Target"],
         ["Start Mission"],
-        ["Mission Status"]
+        ["Mission Status"],
     ], resize_keyboard=True)
 
 def user_config_menu():
     return ReplyKeyboardMarkup([
         ["Api ID", "Api Hash", "Phone No."],
         ["Login", "Logout","Show Config"],
-        ["⬅ Back", "skip"]
+        ["⬅ Back", "skip"],
     ], resize_keyboard=True)
 
 def source_target_menu():
