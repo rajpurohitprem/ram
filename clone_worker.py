@@ -37,6 +37,7 @@ class CloneBot:
         self.allowed_users = set()
         self.current_status = "Idle"
         self.last_update = None
+        self.message_queue = asyncio.Queue()
 
     async def initialize(self):
         bot_config = load_json(BOT_FILE)
@@ -53,9 +54,12 @@ class CloneBot:
             load_json(CONFIG_FILE)["api_hash"]
         )
 
+        @self.bot_client.on(events.NewMessage())
+        async def message_handler(event):
+            if event.sender_id in self.allowed_users:
+                await self.message_queue.put(event)
+
         await self.bot_client.start(bot_token=bot_config["bot_token"])
-        
-        # Automatically select first allowed user as status chat
         self.status_chat_id = next(iter(self.allowed_users))
         return True
 
@@ -70,6 +74,7 @@ class CloneBot:
                 "Standby for live progress updates"
             )
             self.status_message_id = msg.id
+            self.status_chat_id = msg.chat_id
         except Exception as e:
             log_error(f"Initial status send failed: {str(e)}")
 
@@ -95,9 +100,24 @@ class CloneBot:
                     f"⏰ Last Update: {self.last_update}"
                 )
                 self.status_message_id = msg.id
+                self.status_chat_id = msg.chat_id
         except Exception as e:
             log_error(f"Status update failed: {str(e)}")
             self.status_message_id = None
+
+    async def handle_messages(self):
+        while self.is_cloning:
+            try:
+                event = await asyncio.wait_for(self.message_queue.get(), timeout=0.1)
+                if event.text == '/status':
+                    await event.reply(f"Current Status:\n{self.current_status}\nLast Update: {self.last_update}")
+                elif event.text == '/stop':
+                    open(STOP_FILE, 'a').close()
+                    await event.reply("🛑 Stop request received. Operation will halt after current message.")
+            except asyncio.TimeoutError:
+                continue
+            except Exception as e:
+                log_error(f"Message handling error: {str(e)}")
 
     async def cleanup(self):
         if self.bot_client:
@@ -105,14 +125,22 @@ class CloneBot:
 
 bot = CloneBot()
 
-async def clone_worker(start_id=None, end_id=None):
+async def live_updates():
+    """Initialize and maintain live updates during cloning"""
     if not await bot.initialize():
         print("❌ Bot initialization failed")
-        return
-
+        return False
+    
     await bot.send_initial_status()
     bot.is_cloning = True
-    
+    asyncio.create_task(bot.handle_messages())
+    return True
+
+async def clone_worker(start_id=None, end_id=None):
+    if not bot.is_cloning:
+        if not await live_updates():
+            return
+
     config = load_json(CONFIG_FILE)
     if not all(k in config for k in ["api_id", "api_hash", "phone", "source_channel_id", "target_channel_id"]):
         await bot.update_status("❌ Missing configuration")
@@ -185,7 +213,7 @@ async def clone_worker(start_id=None, end_id=None):
     await bot.update_status(f"📊 Ready to clone {total_messages} messages")
 
     # Cloning process
-    progress_interval = max(5, total_messages // 20)  # Update ~20 times
+    progress_interval = max(5, total_messages // 20)
     
     for msg in tqdm(all_messages, desc="Cloning"):
         if os.path.exists(STOP_FILE):
@@ -213,11 +241,11 @@ async def clone_worker(start_id=None, end_id=None):
                     f"⏱️ ~{(total_messages - processed)//2}s remaining"
                 )
 
-            await asyncio.sleep(0.5)  # Rate limiting
+            await asyncio.sleep(0.5)
 
         except Exception as e:
             log_error(f"Message {msg.id} failed: {str(e)}")
-            if processed % 10 == 0:  # Don't spam errors
+            if processed % 1 == 0:
                 await bot.update_status(f"⚠️ Error on message {msg.id} (continuing)")
 
     # Final status
