@@ -503,6 +503,14 @@ def main():
                 CommandHandler("start", start),
             ],
             
+            MISSION_STATUS: [
+                MessageHandler(filters.Regex("^User Config$"), user_config),
+                MessageHandler(filters.Regex("^Source/Target$"), source_target),
+                MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+                MessageHandler(filters.Regex("^Mission Status$"), mission_status),
+                CommandHandler("start", start),
+            ],
+            
             USER_CONFIG: [
                 MessageHandler(filters.Regex("^Api ID$"), request_api_id),
                 MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
