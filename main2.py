@@ -437,8 +437,6 @@ async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Start the clone worker with previous parameters
         asyncio.create_task(clone_worker(
-            context=context,
-            chat_id=update.effective_chat.id,
             start_id=start_id,
             end_id=end_id
         ))
