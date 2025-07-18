@@ -32,8 +32,7 @@ def save_json(data):
         json.dump(data, f, indent=2)
 
 async def clone_worker(start_id=None, end_id=None):
-    if os.path.exists("stop.flag"):
-        os.remove("stop.flag")
+    
     config = load_json()
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
     await client.start(phone=config["phone"])
@@ -81,8 +80,9 @@ async def clone_worker(start_id=None, end_id=None):
 
         
         if not os.path.exists(START_FILE):
-            if not os.path.exists(RESUME_FILE):
-                break
+            break
+        if not os.path.exists(RESUME_FILE):
+            break
         try:
             if msg.media:
                 file_path = await client.download_media(msg)
