@@ -242,4 +242,4 @@ async def clone_worker(start_id=None, end_id=None):
     await client.disconnect()
 
 if __name__ == "__main__":
-    run(clone_worker())
+    asyncio.run(clone_worker())
