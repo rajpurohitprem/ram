@@ -23,7 +23,9 @@ CONFIG_FILE = "config.json"
 BOT_FILE = "bot.json"
 STOP_FLAG = "stop.flag"
 SESSION_FILE = "anon.session"
-MISSION_FILE = "mission.json"
+START_FLAG = "start.flag"
+
+
 
 # Load bot token
 with open(BOT_FILE) as f:
@@ -422,8 +424,7 @@ async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if os.path.exists(START_FLAG):
         os.remove(START_FLAG)
-    if os.path.exists(RESUME_FLAG):
-        os.remove(RESUME_FLAG)
+
     with open(STOP_FLAG, "w") as f:
         f.write("stop")
     await update.message.reply_text("⛔ Clone stopped.", reply_markup=mission_menu())
@@ -444,8 +445,8 @@ async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=mission_menu()
         )
 
-        if not os.path.exists(RESUME_FILE_FLAG):
-            with open(RESUME_FLAG, 'w') as f:
+        if not os.path.exists(START_FLAG):
+            with open(START_FLAG, 'w') as f:
                 pass
         if os.path.exists(STOP_FLAG):
             os.remove(STOP_FLAG)
