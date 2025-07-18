@@ -74,6 +74,35 @@ class CloneBot:
             except Exception as e:
                 log_error(f"Failed to send update to {chat_id}: {str(e)}")
 
+async def clone_worker(start_id=None, end_id=None):
+    #"""Main function to be imported by other scripts"""
+    bot = CloneBot()
+    await bot.start_bot()
+    
+    config = load_json(CONFIG_FILE)
+    if not config:
+        await bot.send_update("❌ Missing or invalid config.json")
+        return False
+
+    try:
+        client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
+        await client.start(phone=config["phone"])
+        
+        await bot.send_update("🚀 Starting cloning process...")
+        bot.is_cloning = True
+
+        # [Your existing cloning logic here]
+        
+        await bot.send_update("✅ Cloning completed successfully")
+        return True
+    except Exception as e:
+        await bot.send_update(f"❌ Error during cloning: {str(e)}")
+        return False
+    finally:
+        bot.is_cloning = False
+        if 'client' in locals():
+            await client.disconnect()
+
 async def main():
     bot = CloneBot()
     await bot.start_bot()
