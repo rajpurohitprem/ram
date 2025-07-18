@@ -499,7 +499,7 @@ def main():
                 MessageHandler(filters.Regex("^User Config$"), user_config),
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
-                MessageHandler(filters.Regex("^Mission Status$"), mission_updates),
+                MessageHandler(filters.Regex("^Mission Status$"), mission_status),
                 CommandHandler("start", start),
             ],
             
