@@ -56,6 +56,7 @@ def main_menu():
     return ReplyKeyboardMarkup([
         ["User Config", "Source/Target"],
         ["Start Mission"]
+        ["Mission Status"]
     ], resize_keyboard=True)
 
 def user_config_menu():
@@ -401,6 +402,17 @@ async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     asyncio.create_task(clone_worker())
     await update.message.reply_text("📥 Cloning started...", reply_markup=mission_menu())
     return MISSION
+    
+    
+async def mission_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if await check_start_command(update, update.message.text):
+        return MAIN_MENU
+
+    await update.message.reply_text("🚀 Mission Status...")
+    asyncio.create_task(live_updates())
+    return MISSION
+
+    
 
 async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
@@ -413,7 +425,7 @@ async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f.write("stop")
     await update.message.reply_text("⛔ Clone stopped.", reply_markup=mission_menu())
     return MISSION
-
+    
 async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     state = load_clone_state()
     if not os.path.exists(STOP_FLAG):
@@ -479,6 +491,7 @@ def main():
             MessageHandler(filters.Regex("^User Config$"), user_config),
             MessageHandler(filters.Regex("^Source/Target$"), source_target),
             MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+            MessageHandler(filters.Regex("^Mission Status$"), mission_updates),
             CommandHandler("start", start),
         ],
         states={
@@ -486,17 +499,10 @@ def main():
                 MessageHandler(filters.Regex("^User Config$"), user_config),
                 MessageHandler(filters.Regex("^Source/Target$"), source_target),
                 MessageHandler(filters.Regex("^Start Mission$"), start_mission),
+                MessageHandler(filters.Regex("^Mission Status$"), mission_updates),
                 CommandHandler("start", start),
             ],
-            USER_CONFIG: [
-                CommandHandler("start", start),
-                MessageHandler(filters.Regex("^Api ID$"), request_api_id),
-                MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
-                MessageHandler(filters.Regex("^Phone No\.$"), request_phone),
-                MessageHandler(filters.Regex("^Login$"), login),
-                MessageHandler(filters.Regex("^Logout$"), logout),
-                MessageHandler(filters.Regex("^⬅ Back$"), back_to_main),
-            ],
+            
             USER_CONFIG: [
                 MessageHandler(filters.Regex("^Api ID$"), request_api_id),
                 MessageHandler(filters.Regex("^Api Hash$"), request_api_hash),
