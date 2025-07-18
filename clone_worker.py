@@ -56,23 +56,15 @@ class CloneBot:
         async def message_handler(event):
             
 
-            if event.text == '/start':
+            if event.text == 'Full Clone'or'Range Clone'or 'Resume Clone':
                 self.active_chats.add(event.chat_id)
-                await event.reply("🤖 Clone Bot Activated\n"
-                               "Send /status for current progress\n"
-                               "Send /stop to cancel operation")
-            elif event.text == '/status':
                 await self.send_status(event.chat_id)
-            elif event.text == '/stop':
-                open(STOP_FILE, 'a').close()
-                await event.reply("🛑 Stop request received. Operation will halt after current message.")
-
+                    
         await self.bot_client.start(bot_token=bot_config["bot_token"])
         asyncio.create_task(self.bot_client.run_until_disconnected())
 
     async def send_status(self, chat_id=None):
-        if not self.bot_client:
-            return
+        
             
         status_message = (
             f"🔄 Current Status: {self.current_status}\n"
@@ -87,8 +79,7 @@ class CloneBot:
                 log_error(f"Status send failed: {str(e)}")
 
     async def update_progress(self, message):
-        if not self.bot_client or not self.active_chats:
-            return
+        
             
         self.current_status = message
         self.last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -134,7 +125,7 @@ async def clone_worker(start_id=None, end_id=None):
         return
 
     client = TelegramClient(SESSION_FILE, config["api_id"], config["api_hash"])
-    await client.start(phone=config["phone"])
+    #await client.start(phone=config["phone"])
     
     bot.is_cloning = True
     await bot.update_progress("🚀 Starting cloning process...")
