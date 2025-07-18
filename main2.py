@@ -55,7 +55,7 @@ def ensure_config_key(key, value):
 def main_menu():
     return ReplyKeyboardMarkup([
         ["User Config", "Source/Target"],
-        ["Start Mission"]
+        ["Start Mission"],
         ["Mission Status"]
     ], resize_keyboard=True)
 
