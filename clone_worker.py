@@ -69,23 +69,23 @@ class CloneBot:
             
         self.current_progress = message
         try:
-        if update_existing and self.last_message_id and self.last_chat_id:
-            # Edit existing message
-            await self.bot_client.edit_message(
-                self.last_chat_id,
-                self.last_message_id,
-                message
-            )
-        else:
-            # Send new message and store its ID
-            msg = await self.bot_client.send_message(
-                self.last_chat_id or list(self.active_chats)[0],
-                message
-            )
-            self.last_message_id = msg.id
-            self.last_chat_id = msg.chat_id
-    except Exception as e:
-        log_error(f"Failed to update progress: {e}")
+            if update_existing and self.last_message_id and self.last_chat_id:
+                # Edit existing message
+                await self.bot_client.edit_message(
+                    self.last_chat_id,
+                    self.last_message_id,
+                    message
+                )
+            else:
+                # Send new message and store its ID
+                msg = await self.bot_client.send_message(
+                    self.last_chat_id or list(self.active_chats)[0],
+                    message
+                )
+                self.last_message_id = msg.id
+                self.last_chat_id = msg.chat_id
+        except Exception as e:
+            log_error(f"Failed to update progress: {e}")
   
 clone_bot = CloneBot()
 
