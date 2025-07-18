@@ -12,7 +12,7 @@ SENT_LOG = "sent_ids.txt"
 ERROR_LOG = "errors.txt"
 STOP_FILE = "stop.flag"
 START_FILE = "start.flag"
-RESUMR_FILE = "resume.flag"
+RESUME_FILE = "resume.flag"
 
 open(SENT_LOG, "a").close()
 open(ERROR_LOG, "a").close()
