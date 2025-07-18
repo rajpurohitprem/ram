@@ -23,6 +23,7 @@ CONFIG_FILE = "config.json"
 BOT_FILE = "bot.json"
 STOP_FLAG = "stop.flag"
 SESSION_FILE = "anon.session"
+MISSION_FILE = "mission.json"
 
 # Load bot token
 with open(BOT_FILE) as f:
@@ -44,6 +45,21 @@ def ensure_config_key(key, value):
     config = load_config()
     config[key] = value
     save_config(config)
+
+def load_mission():
+    if not os.path.exists(MISSION_FILE):
+        return {}
+    with open(MISSION_FILE) as f:
+        return json.load(f)
+
+def save_mission(data):
+    with open(MISION_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def ensure_mission(key, value):
+    mission = load_config()
+    config[key] = value
+    save_config(mission)
 
 # ---------------------- REPLY KEYBOARDS ----------------------
 
@@ -383,6 +399,12 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
+        
+    if not os.path.exists(START_FLAG):
+        with open(START_FLAG, 'w') as f:
+    if os.path.exists(STOP_FLAG):
+        os.remove(STOP_FLAG)
+        
     await update.message.reply_text("🚀 Starting full clone...")
     asyncio.create_task(clone_worker())
     await update.message.reply_text("📥 Cloning started...", reply_markup=mission_menu())
@@ -391,6 +413,11 @@ async def full_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await check_start_command(update, update.message.text):
         return MAIN_MENU
+
+    if os.path.exists(START_FLAG):
+        os.remove(START_FLAG)
+    if os.path.exists(RESUME_FLAG):
+        os.remove(RESUME_FLAG)
     with open(STOP_FLAG, "w") as f:
         f.write("stop")
     await update.message.reply_text("⛔ Clone stopped.", reply_markup=mission_menu())
@@ -398,7 +425,7 @@ async def stop_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     state = load_clone_state()
-    if not state:
+    if not os.path.exists(STOP_FLAG):
         await update.message.reply_text("⚠️ No previous clone operation to resume", reply_markup=mission_menu())
         return MISSION
     
@@ -410,6 +437,11 @@ async def resume_clone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🔄 Resuming clone from {start_id or 'start'} to {end_id or 'end'}...",
             reply_markup=mission_menu()
         )
+
+        if not os.path.exists(RESUME_FILE_FLAG):
+            with open(RESUME_FLAG, 'w') as f:
+        if os.path.exists(STOP_FLAG):
+            os.remove(STOP_FLAG)
         
         # Start the clone worker with previous parameters
         asyncio.create_task(clone_worker(
