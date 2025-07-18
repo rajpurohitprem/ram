@@ -102,10 +102,6 @@ async def clone_worker(start_id=None, end_id=None):
         
     
     print("✅ Cloning complete.")
-    if os.path.exists("stop.flag"):
-        os.remove("stop.flag")
-    if os.path.exists("resume.flag"):
-        os.remove("resume.flag")
     if os.path.exists("start.flag"):
         os.remove("start.flag")
     await client.disconnect()
