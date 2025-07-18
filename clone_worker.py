@@ -213,7 +213,7 @@ async def clone_worker(start_id=None, end_id=None):
     await bot.update_status(f"📊 Ready to clone {total_messages} messages")
 
     # Cloning process
-    progress_interval = max(5, total_messages // 20)
+    progress_interval = (1)
     
     for msg in tqdm(all_messages, desc="Cloning"):
         if os.path.exists(STOP_FILE):
