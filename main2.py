@@ -389,6 +389,9 @@ async def set_range_end(update: Update, context: ContextTypes.DEFAULT_TYPE):
         start_id = context.user_data["range_start"]
         end_id = int(text)
         await update.message.reply_text(f"🚀 Starting clone for messages {start_id} to {end_id}...")
+        if not os.path.exists(START_FLAG):
+            with open(START_FLAG, 'w') as f:
+                pass  # Creates empty file
         asyncio.create_task(clone_worker(start_id=start_id, end_id=end_id))
         await update.message.reply_text("📥 Range clone started.", reply_markup=mission_menu())
         return MISSION
