@@ -411,7 +411,7 @@ async def mission_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("🚀 Mission Status...")
     asyncio.create_task(live_updates())
-    return MISSION
+    return MAIN_MENU
 
     
 
