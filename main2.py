@@ -110,6 +110,7 @@ def clear_clone_state():
 # ---------------------- STATES ----------------------
 (
     MAIN_MENU,
+    MISSION_STATUS
     USER_CONFIG,
     WAITING_FOR_API_ID,
     WAITING_FOR_API_HASH,
@@ -119,7 +120,7 @@ def clear_clone_state():
     MISSION,
     WAITING_FOR_RANGE_START,
     WAITING_FOR_RANGE_END
-) = range(10)
+) = range(11)
 
 # ---------------------- HANDLERS ----------------------
 
